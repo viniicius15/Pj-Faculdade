@@ -1,8 +1,46 @@
 # HelpTech API
 
-API REST para abertura e consulta de **chamados de suporte de TI**.
+![Node.js](https://img.shields.io/badge/Node.js-22-339933?logo=nodedotjs&logoColor=white)
+![Express](https://img.shields.io/badge/Express-4.19-000000?logo=express&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![Jest](https://img.shields.io/badge/Jest-29-C21325?logo=jest&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![Testes](https://img.shields.io/badge/testes-7%2F7-brightgreen)
 
-Projeto Integrador — Ciência da Computação (FACAPE).
+API REST para **abertura e consulta de chamados de suporte de TI**.
+
+> **Projeto Integrador** — Bacharelado em Ciência da Computação — FACAPE
+
+---
+
+## Começando rápido
+
+```bash
+git clone <URL-DO-REPOSITORIO>
+cd pj-sist-gustavo
+docker compose up -d --build
+curl http://localhost:3001/health
+```
+
+A API fica disponível em **http://localhost:3001**.
+
+---
+
+## Sumário
+
+1. [Descrição do problema](#1-descrição-do-problema)
+2. [Tecnologias](#2-tecnologias)
+3. [Estrutura do projeto](#3-estrutura-do-projeto)
+4. [Como rodar com Docker Compose](#4-como-rodar-com-docker-compose)
+5. [Como rodar localmente](#5-como-rodar-localmente)
+6. [Variáveis de ambiente](#6-variáveis-de-ambiente)
+7. [Banco de dados](#7-banco-de-dados)
+8. [Endpoints](#8-endpoints)
+9. [Regras de negócio](#9-regras-de-negócio)
+10. [Testes](#10-testes)
+11. [Princípio SOLID aplicado](#11-princípio-solid-aplicado)
+12. [Docker](#12-docker)
+13. [Autoria e Copyright](#13-autoria-e-copyright)
 
 ---
 
@@ -17,13 +55,18 @@ Esta API resolve isso permitindo **abrir** e **consultar** chamados, garantindo 
 chamado tenha **descrição útil** e **prioridade válida**, para que a fila de atendimento
 faça sentido.
 
+**Público-alvo:** equipe de TI e funcionários que abrem chamados de suporte.
+
 ## 2. Tecnologias
 
-- **Node.js** + **Express** — servidor HTTP e definição das rotas.
-- **PostgreSQL 16** + driver **pg** — persistência dos chamados.
-- **Jest** + **Supertest** — testes automatizados de integração sobre as rotas.
-- **Docker / Docker Compose** — execução isolada da API e do banco.
-- **Git / GitHub** — versionamento.
+| Tecnologia | Versão | Papel no projeto |
+| --- | --- | --- |
+| [Node.js](https://nodejs.org) | 22 | ambiente de execução |
+| [Express](https://expressjs.com) | 4.19 | servidor HTTP e definição das rotas |
+| [PostgreSQL](https://www.postgresql.org) + [pg](https://node-postgres.com) | 16 / 8.23 | persistência dos chamados |
+| [Jest](https://jestjs.io) + [Supertest](https://github.com/ladjs/supertest) | 29 / 7 | testes automatizados de integração |
+| [Docker](https://www.docker.com) / Compose | — | execução isolada da API e do banco |
+| Git / GitHub | — | versionamento |
 
 A aplicação possui **duas implementações de repositório**: uma em **memória** (Array) e
 uma em **PostgreSQL**. As duas seguem o mesmo contrato, então a regra de negócio funciona
@@ -49,9 +92,16 @@ docker-compose.yml                         # sobe o banco + a API
 Dockerfile
 ```
 
-## 4. Como rodar tudo (Docker Compose — recomendado)
+O fluxo de uma requisição é sempre o mesmo:
 
-Pré-requisito: Docker Desktop em execução.
+```
+HTTP  →  Controller  →  Service  →  Repository  →  PostgreSQL
+         (rotas)        (regras)    (dados)
+```
+
+## 4. Como rodar com Docker Compose
+
+**Pré-requisito:** Docker Desktop em execução.
 
 ```bash
 docker compose up -d --build
@@ -61,20 +111,21 @@ Isso sobe **dois containers**: o PostgreSQL (`helptech-db`) e a API (`helptech-a
 A API só inicia depois que o banco está realmente pronto (healthcheck + `depends_on`).
 
 Acesse em **http://localhost:3001** (a porta 3000 do host já está ocupada por outro
-container nesta máquina, então mapeamos a API na 3001 — veja a seção 12).
+container nesta máquina, então mapeamos a API na 3001 — veja a [seção 12](#12-docker)).
 
 Comandos úteis:
 
-```bash
-docker compose ps            # status dos containers
-docker compose logs -f api   # logs da API
-docker compose down          # para tudo (mantém os dados)
-docker compose down -v       # para tudo e APAGA os dados do banco
-```
+| Comando | O que faz |
+| --- | --- |
+| `docker compose ps` | status dos containers |
+| `docker compose logs -f api` | logs da API em tempo real |
+| `docker compose stop` | para os containers, mantendo os dados |
+| `docker compose down` | remove os containers, mantendo os dados |
+| `docker compose down -v` | remove tudo, **apagando os dados do banco** |
 
-## 5. Como rodar localmente (sem Docker para a API)
+## 5. Como rodar localmente
 
-Pré-requisito: Node.js 18+ (testado com Node 24) e um PostgreSQL acessível.
+**Pré-requisito:** Node.js 18+ (testado com Node 24) e um PostgreSQL acessível.
 
 ```bash
 npm install
@@ -183,14 +234,23 @@ Retorna `404 Not Found` quando o id não existe.
 curl http://localhost:3001/health
 ```
 
+### Resumo
+
+| Método | Rota | Descrição | Sucesso | Erros |
+| --- | --- | --- | --- | --- |
+| `POST` | `/chamados` | abre um chamado | `201` | `400` |
+| `GET` | `/chamados` | lista todos (filtro opcional `?prioridade=`) | `200` | `400` |
+| `GET` | `/chamados/:id` | consulta por id | `200` | `404` |
+| `GET` | `/health` | verificação de disponibilidade | `200` | — |
+
 ## 9. Regras de negócio
 
-Implementadas na camada **Service** (`src/services/ChamadoService.js`):
+Implementadas na camada **Service** ([ChamadoService.js](src/services/ChamadoService.js)):
 
-- **RN1 — Descrição útil:** `descricao` é obrigatória e deve ter no mínimo **10 caracteres**
-  (após remover espaços). Evita chamados vagos como "não funciona".
-- **RN2 — Prioridade válida:** `prioridade` deve ser exatamente `BAIXA`, `MEDIA` ou `ALTA`.
-  Evita valores inventados que quebram a triagem.
+| Regra | Descrição | Motivo |
+| --- | --- | --- |
+| **RN1** | `descricao` é obrigatória e deve ter no mínimo **10 caracteres** (após remover espaços) | evita chamados vagos como "não funciona" |
+| **RN2** | `prioridade` deve ser exatamente `BAIXA`, `MEDIA` ou `ALTA` | evita valores inventados que quebram a triagem |
 
 Quando uma regra é violada, o Service lança `RegraNegocioError` e o Controller converte
 em **HTTP 400**.
@@ -216,13 +276,18 @@ Cenários cobertos:
 | Consulta vazia | `GET /chamados` retorna `200` com `[]` |
 | Consulta por id inexistente | `GET /chamados/:id` retorna `404` |
 
-## 11. Princípio SOLID aplicado: DIP (Dependency Inversion)
+## 11. Princípio SOLID aplicado
+
+**DIP — Dependency Inversion Principle**
 
 - **Onde:** [IChamadoRepository.js](src/repositories/IChamadoRepository.js) (contrato),
   [ChamadoRepositoryMemory.js](src/repositories/ChamadoRepositoryMemory.js) e
   [ChamadoRepositoryPostgres.js](src/repositories/ChamadoRepositoryPostgres.js)
   (duas implementações), [ChamadoService.js](src/services/ChamadoService.js) (recebe o
   repositório pelo construtor) e [app.js](src/app.js) (injeção).
+- **Problema que evita:** sem DIP, o Service ficaria acoplado ao armazenamento em memória.
+  Trocar por banco de dados — ou usar um repositório falso nos testes — obrigaria a
+  editar as classes de domínio.
 - **A prova real:** ao adicionar o PostgreSQL, **nenhuma linha** de `ChamadoService.js`
   ou `ChamadoController.js` precisou ser reescrita por causa do banco. Só mudaram os
   arquivos que escolhem *qual* implementação usar (`app.js` e `server.js`).
@@ -263,15 +328,12 @@ aproveitar o cache de camadas), instala só dependências de produção com
 
 ### Colaboração
 
-- **Vinicius Cavalcanti Lima** 
-- **Berg Guedes** 
-- **Julia Alves** 
-- **Geisla Iasmin** 
-- **Gabriel Oliveira** 
-- **Filipe Inacio** 
+- **Vinicius Cavalcanti Lima**
+- **Berg Guedes**
+- **Julia Alves**
+- **Geisla Iasmin**
+- **Gabriel Oliveira**
+- **Filipe Inacio**
 
 Projeto desenvolvido para a disciplina de **Projeto Integrador** —
 Bacharelado em Ciência da Computação, FACAPE.
-
-#   P j - F a c u l d a d e  
- 
