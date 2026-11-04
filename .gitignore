@@ -1,0 +1,8 @@
+node_modules/
+coverage/
+.env
+npm-debug.log*
+.DS_Store
+
+# Guia interno da equipe - nao vai para o repositorio
+GUIA-COMANDOS.md

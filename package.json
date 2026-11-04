@@ -1,0 +1,31 @@
+{
+  "name": "helptech-api",
+  "version": "1.0.0",
+  "description": "API REST para abertura e consulta de chamados de suporte de TI (Projeto Integrador FACAPE)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "jest"
+  },
+  "keywords": [
+    "api",
+    "rest",
+    "express",
+    "chamados",
+    "facape"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  }
+}
