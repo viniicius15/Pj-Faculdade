@@ -1,0 +1,42 @@
+services:
+  # Banco de dados PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: helptech-db
+    environment:
+      POSTGRES_USER: helptech
+      POSTGRES_PASSWORD: helptech
+      POSTGRES_DB: helptech
+    ports:
+      - "5432:5432"
+    volumes:
+      - helptech-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helptech -d helptech"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Aplicacao Node.js
+  api:
+    build: .
+    container_name: helptech-api
+    environment:
+      PORT: 3000
+      # "db" e o nome do servico acima: o Docker resolve esse nome para o IP do container.
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: helptech
+      DB_PASSWORD: helptech
+      DB_NAME: helptech
+    ports:
+      # "porta-do-seu-PC : porta-do-container"
+      # Usamos 3001 no host porque a 3000 já está ocupada por outro container nesta máquina.
+      - "3001:3000"
+    depends_on:
+      db:
+        # Só sobe a API quando o banco estiver realmente pronto para receber conexões.
+        condition: service_healthy
+
+volumes:
+  helptech-db-data:
