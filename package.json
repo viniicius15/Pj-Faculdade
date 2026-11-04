@@ -15,8 +15,8 @@
     "chamados",
     "facape"
   ],
-  "author": "",
-  "license": "MIT",
+  "author": "Vinicius Cavalcanti Lima & Equipe",
+  "private": true,
   "dependencies": {
     "express": "^4.19.2",
     "pg": "^8.23.1"
